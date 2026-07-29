@@ -1,0 +1,17 @@
+{
+  "name": "disdex-miniapp",
+  "version": "1.0.0",
+  "description": "Telegram Mini App for /serverfinder and /userfinder, backed by the disdex.io API, with the same key-gated access model as the Discord bot.",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "dotenv": "^16.4.5"
+  }
+}
