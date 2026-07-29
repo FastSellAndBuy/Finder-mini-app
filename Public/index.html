@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>disdex finder</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="wordmark">
+      <span class="ping-dot" aria-hidden="true"></span>
+      disdex<span class="wordmark-sub">·finder</span>
+    </div>
+    <div class="topbar-status" id="statusPill">connecting…</div>
+  </header>
+
+  <nav class="tabs" id="tabs" hidden>
+    <button class="tab active" data-tab="servers">Servers</button>
+    <button class="tab" data-tab="users">Users</button>
+    <button class="tab tab-admin" data-tab="admin" id="adminTabBtn" hidden>Admin</button>
+  </nav>
+
+  <main id="app">
+
+    <!-- Locked state -->
+    <section class="panel locked" id="lockedPanel" hidden>
+      <div class="locked-index">000</div>
+      <h1>Access required</h1>
+      <p>You need a key to search servers and users. Ask an admin for one, then redeem it below.</p>
+      <form id="redeemForm" class="stack">
+        <input type="text" id="redeemInput" placeholder="fk_••••••••••••••••" autocomplete="off" />
+        <button type="submit" class="btn-primary">Redeem key</button>
+      </form>
+      <p class="locked-error" id="redeemError" hidden></p>
+    </section>
+
+    <!-- Banned state -->
+    <section class="panel locked" id="bannedPanel" hidden>
+      <div class="locked-index">403</div>
+      <h1>Access revoked</h1>
+      <p>An admin has banned this account from using the finder.</p>
+    </section>
+
+    <!-- Servers tab -->
+    <section class="tab-panel" id="serversPanel" hidden>
+      <form class="searchbar" id="serversForm">
+        <input type="search" id="serversQuery" placeholder="Search server name or vanity…" autocomplete="off" />
+        <button type="button" class="btn-filter" id="serversFilterToggle" aria-expanded="false">Filters</button>
+      </form>
+      <div class="filters" id="serversFilters" hidden>
+        <label>Sort
+          <select id="serversSort">
+            <option value="">Default</option>
+            <option value="members">Members</option>
+            <option value="online">Online now</option>
+            <option value="boosts">Boosts</option>
+            <option value="newest">Newest indexed</option>
+            <option value="oldest">Oldest indexed</option>
+          </select>
+        </label>
+        <label>Tag
+          <input type="text" id="serversTag" placeholder="e.g. SAB" />
+        </label>
+        <label>Tag status
+          <select id="serversTagStatus">
+            <option value="any">Any</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </label>
+        <label>NSFW
+          <select id="serversNsfw">
+            <option value="exclude">Exclude</option>
+            <option value="include">Include</option>
+            <option value="only">Only NSFW</option>
+          </select>
+        </label>
+        <label>Vanity
+          <select id="serversVanity">
+            <option value="any">Any</option>
+            <option value="has">Has vanity</option>
+            <option value="no">No vanity</option>
+            <option value="only">Vanity only</option>
+          </select>
+        </label>
+        <button type="button" class="btn-primary" id="serversApply">Apply filters</button>
+      </div>
+
+      <div class="scan-line" id="serversScan" hidden></div>
+      <div class="results" id="serversResults"></div>
+      <p class="empty-state" id="serversEmpty" hidden>No servers matched that search.</p>
+      <button class="btn-load-more" id="serversLoadMore" hidden>Load more</button>
+    </section>
+
+    <!-- Users tab -->
+    <section class="tab-panel" id="usersPanel" hidden>
+      <form class="searchbar" id="usersForm">
+        <input type="search" id="usersQuery" placeholder="Search username or display name…" autocomplete="off" />
+        <button type="button" class="btn-filter" id="usersFilterToggle" aria-expanded="false">Filters</button>
+      </form>
+      <div class="filters" id="usersFilters" hidden>
+        <label>Sort
+          <select id="usersSort">
+            <option value="">Default</option>
+            <option value="invites">Invites</option>
+            <option value="servers">Servers</option>
+            <option value="username">Username</option>
+            <option value="newest">Newest seen</option>
+            <option value="oldest">Oldest seen</option>
+          </select>
+        </label>
+        <label>Type
+          <select id="usersType">
+            <option value="">Any</option>
+            <option value="user">User</option>
+            <option value="bot">Bot</option>
+          </select>
+        </label>
+        <button type="button" class="btn-primary" id="usersApply">Apply filters</button>
+      </div>
+
+      <div class="scan-line" id="usersScan" hidden></div>
+      <div class="results" id="usersResults"></div>
+      <p class="empty-state" id="usersEmpty" hidden>No users matched that search.</p>
+      <button class="btn-load-more" id="usersLoadMore" hidden>Load more</button>
+    </section>
+
+    <!-- Admin tab -->
+    <section class="tab-panel" id="adminPanel" hidden>
+      <div class="card admin-card">
+        <div class="card-index">KEY</div>
+        <h2>Generate access key</h2>
+        <p class="card-sub">Leave the ID blank to get a shareable code instead of assigning it directly.</p>
+        <form id="keygenForm" class="stack">
+          <input type="text" id="keygenTarget" placeholder="Telegram user ID (optional)" autocomplete="off" />
+          <button type="submit" class="btn-primary">Generate key</button>
+        </form>
+        <p class="admin-result" id="keygenResult" hidden></p>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-index">BAN</div>
+        <h2>Ban a user</h2>
+        <form id="banForm" class="stack">
+          <input type="text" id="banTarget" placeholder="Telegram user ID" autocomplete="off" required />
+          <button type="submit" class="btn-danger">Ban</button>
+        </form>
+        <p class="admin-result" id="banResult" hidden></p>
+      </div>
+
+      <div class="card admin-card">
+        <div class="card-index">UNBAN</div>
+        <h2>Unban a user</h2>
+        <form id="unbanForm" class="stack">
+          <input type="text" id="unbanTarget" placeholder="Telegram user ID" autocomplete="off" required />
+          <button type="submit" class="btn-primary">Unban</button>
+        </form>
+        <p class="admin-result" id="unbanResult" hidden></p>
+      </div>
+    </section>
+
+  </main>
+
+  <template id="serverCardTemplate">
+    <article class="card">
+      <div class="card-index"></div>
+      <div class="card-icon"></div>
+      <div class="card-body">
+        <h3 class="card-title"></h3>
+        <p class="card-desc"></p>
+        <div class="card-stats">
+          <span class="stat"><span class="stat-label">members</span><span class="stat-value stat-members"></span></span>
+          <span class="stat"><span class="stat-label">online</span><span class="stat-value stat-online"></span></span>
+          <span class="stat"><span class="stat-label">boosts</span><span class="stat-value stat-boosts"></span></span>
+        </div>
+        <div class="card-tag" hidden></div>
+        <a class="card-invite" href="#" target="_blank" rel="noopener" hidden>Join server →</a>
+      </div>
+    </article>
+  </template>
+
+  <template id="userCardTemplate">
+    <article class="card">
+      <div class="card-index"></div>
+      <div class="card-icon"></div>
+      <div class="card-body">
+        <h3 class="card-title"></h3>
+        <p class="card-desc"></p>
+        <div class="card-stats">
+          <span class="stat"><span class="stat-label">servers</span><span class="stat-value stat-servers"></span></span>
+          <span class="stat"><span class="stat-label">invites</span><span class="stat-value stat-invites"></span></span>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
